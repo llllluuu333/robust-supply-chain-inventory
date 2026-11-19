@@ -65,7 +65,6 @@ python -m unittest discover -s examples -p test_read_flow_result.py -v
 | [inventory_lab/flow_engine.py](inventory_lab/flow_engine.py) | 十进制物料流模拟 |
 | [tests/](tests/) | 独立枚举、输入与物料流测试 |
 | [paper/主论文工作稿.md](paper/主论文工作稿.md) | 研究问题、方法和探索性结果 |
-| [简历项目描述.md](简历项目描述.md) | 可根据个人实际贡献调整的简历措辞 |
 
 ## 研究背景与边界
 
