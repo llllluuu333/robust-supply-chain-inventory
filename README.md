@@ -1,5 +1,7 @@
 # 多级供应链鲁棒库存优化
 
+[English](README_EN.md)
+
 **Python · 混合整数规划 · 鲁棒优化 · 库存仿真**
 
 当供应商提前期发生波动，制造企业应如何在多个环节配置库存？本项目构建多级库存研究原型：针对有限个提前期情景，求解一组共享的服务时间决策，控制最坏情景下的库存缓冲目标；并使用独立的物料流模拟器观察合成订单的交付与欠交过程。
@@ -22,7 +24,7 @@
 | 最坏情景加权缓冲目标 | 4.7641 |
 | 各情景目标（名义 / A 延迟 / B 延迟） | 3.4641 / 4.4641 / 4.7641 |
 | 求解状态 | HiGHS 报告最优；独立枚举结果一致 |
-| 测试 | 本地运行 20 项测试通过 |
+| 验证 | 合成算例通过独立枚举对照；测试命令见下方 |
 
 数值只用于展示模型与程序的运行方式，不代表真实成本、节约金额或服务水平。
 
@@ -43,11 +45,12 @@ min  max_ω  Σᵢ hᵢ · bᵢ(τᵢω)
 ~~~bash
 python -m pip install .
 python -m inventory_lab.robust_demo
+python -m inventory_lab.robust_cli --input examples/synthetic_robust.json --output outputs/robust_result.json
 python -m inventory_lab.flow_demo --output outputs/flow_demo.json
 python examples/read_flow_result.py --input outputs/flow_demo.json
 ~~~
 
-物料流示例不覆盖已有文件，重复执行时请更换输出文件名。
+两个文件输出命令均不覆盖已有文件；重复执行时请更换输出文件名。鲁棒结果记录输入文件的 SHA-256、求解状态、上下界、服务时间和逐情景目标。退出码 0 表示已验证为最优，2 表示未获得最优性认证，1 表示输入或运行错误。
 
 验证：
 
@@ -55,6 +58,10 @@ python examples/read_flow_result.py --input outputs/flow_demo.json
 python -m unittest discover -s tests -v
 python -m unittest discover -s examples -p test_read_flow_result.py -v
 ~~~
+
+## 自定义网络输入
+
+以 [合成 JSON 示例](examples/synthetic_robust.json)为模板：节点列表决定权重、缓冲曲线和各情景处理时间数组的顺序；edges 保存上游与下游的节点名称，网络必须无环。scenarios 中的 T 是各节点的非负整数处理时间；curves 是从零开始、随保护期非减的节点缓冲曲线，须覆盖模型计算出的最长保护期；source_service_caps 为源点出站服务时间上限。最多支持 32 个节点、128 条弧和 16 个情景。请保持一致的时间单位；示例参数并非业务数据。
 
 ## 目录
 

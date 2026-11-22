@@ -65,7 +65,7 @@ class DecimalMaterialFlowTests(unittest.TestCase):
     def test_simulated_trace_keeps_decimal_strings_and_cumulative_ledgers(self):
         result = flow.simulate(json.dumps(flow_demo.synthetic_input()).encode('utf8'))
         self.assertEqual(result['schema_version'], 'inventory_lab.flow.result.v1')
-        self.assertEqual(result['package_version'], '0.8.0')
+        self.assertEqual(result['package_version'], __import__('inventory_lab').__version__)
         self.assertEqual(result['days'], 8)
         row = result['daily_trace'][0]
         self.assertIsInstance(row['demand']['Assembler'], str)

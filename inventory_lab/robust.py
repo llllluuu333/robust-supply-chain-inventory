@@ -40,7 +40,7 @@ def _validated(data):
         raise InputError('Duplicate edges')
     weights=data.get('weights')
     if not isinstance(weights,list) or len(weights)!=n or any(not _is_real_nonnegative(x) for x in weights):
-        raise InputError('Case01 weights must be finite nonnegative numbers')
+        raise InputError('Weights must be finite nonnegative numbers')
     scenarios=data.get('scenarios')
     if not isinstance(scenarios,list) or not 1<=len(scenarios)<=16:
         raise InputError('Provide between 1 and 16 finite scenarios')
@@ -140,7 +140,7 @@ def solve(data,time_limit=60.):
     for a,b in edges:A[row,n+idx[a]]=1;A[row,idx[b]]=-1;ub[row]=0;row+=1
     assert row==A.shape[0]
     start=time.perf_counter()
-    res=milp(objective,integrality=integrality,bounds=Bounds(lo,hi),constraints=LinearConstraint(A.tocsr(),lb,ub),options={'time_limit':float(time_limit),'mip_rel_gap':0.0,'threads':1})
+    res=milp(objective,integrality=integrality,bounds=Bounds(lo,hi),constraints=LinearConstraint(A.tocsr(),lb,ub),options={'time_limit':float(time_limit),'mip_rel_gap':0.0})
     def finite(value):return float(value) if value is not None and math.isfinite(value) else None
     def unscale(value):
         value=finite(value)
