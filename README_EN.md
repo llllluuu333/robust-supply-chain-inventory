@@ -26,10 +26,18 @@ The fictional example has two suppliers and one assembly stage under three lead-
 
 A second fictional two-supplier example solves a nominal and a robust model, then evaluates both fixed policies under the same scenarios:
 
-| Policy | Nominal objective | Worst of three scenarios |
-| --- | ---: | ---: |
-| Nominal | 32.0711 | 40.0711 |
-| Robust | 36.3137 | 38.8564 |
+~~~mermaid
+graph LR
+    A[Supplier A] --> M[Assembly M]
+    B[Supplier B] --> M
+~~~
+
+In node order A, B, M, the nominal policy has inbound service times SI = (0, 0, 2) and outbound times S = (2, 2, 0); the robust policy has SI = S = (0, 0, 0). Times are fictional days. Each fixed policy is evaluated under all three scenarios.
+
+| Policy | Nominal | Delay A | Delay B | Worst objective |
+| --- | ---: | ---: | ---: | ---: |
+| Nominal | 32.0711 | 40.0711 | 33.6603 | 40.0711 |
+| Robust | 36.3137 | 38.8564 | 37.4940 | 38.8564 |
 
 This example illustrates a trade-off within the specified scenarios, not actual cost savings or a guarantee of future performance. Run it with:
 
