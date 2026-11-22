@@ -2,6 +2,9 @@
 import argparse
 import hashlib
 import json
+import platform
+import numpy
+import scipy
 from pathlib import Path
 import sys
 from . import __version__
@@ -41,6 +44,10 @@ def main(argv=None):
         payload = {"schema_version": "inventory_lab.network.result.v1",
                    "package_version": __version__,
                    "input_sha256": hashlib.sha256(content).hexdigest(),
+                   "environment": {"python": platform.python_version(),
+                                   "numpy": numpy.__version__,
+                                   "scipy": scipy.__version__,
+                                   "time_limit_seconds": args.time_limit},
                    "result": result}
         atomic_write_new(args.output, payload)
         print(json.dumps({"output": str(args.output), "optimal": result["optimal"],
