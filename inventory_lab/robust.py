@@ -28,7 +28,7 @@ def _validated(data):
     if not isinstance(data,dict) or data.get('schema_version')!=SCHEMA:
         raise InputError('Unsupported robust network schema version')
     allowed = {'schema_version', 'time_unit', 'nodes', 'edges', 'weights',
-               'scenarios', 'source_service_caps', 'curves'}
+               'scenarios', 'source_service_caps', 'terminal_service_caps', 'node_service_caps', 'curves'}
     unexpected = set(data) - allowed
     if unexpected:
         raise InputError('Unsupported input fields: ' + ', '.join(sorted(map(str, unexpected))))
@@ -64,6 +64,15 @@ def _validated(data):
     parents={x:[] for x in names};children={x:[] for x in names}
     for a,b in edges:parents[b].append(a);children[a].append(b)
     if any(parents[x] for x in caps):raise InputError('Service caps may only be specified on source nodes')
+    node_caps=data.get('node_service_caps', {})
+    if (not isinstance(node_caps,dict) or any(k not in idx for k in node_caps) or
+            any(type(x) is not int or not 0<=x<=365 for x in node_caps.values())):
+        raise InputError('Node service caps must map node names to integer days in [0,365]')
+    terminal_caps=data.get('terminal_service_caps', {})
+    if (not isinstance(terminal_caps,dict) or
+            any(k not in idx or children[k] for k in terminal_caps) or
+            any(type(x) is not int or not 0<=x<=365 for x in terminal_caps.values())):
+        raise InputError('Terminal service caps must map terminal node names to integer days in [0,365]')
     todo={x:len(parents[x]) for x in names};queue=deque(x for x in names if todo[x]==0);order=[]
     while queue:
         x=queue.popleft();order.append(x)
@@ -130,8 +139,9 @@ def solve(data,time_limit=60.):
     for i,name in enumerate(names):
         hi[i]=M[i]-maxT[i];hi[n+i]=M[i]
         if not parents[name]:hi[i]=0
-        if not children[name]:hi[n+i]=0
+        if not children[name]:hi[n+i]=min(hi[n+i],data.get('terminal_service_caps', {}).get(name,0))
         if name in data['source_service_caps']:hi[n+i]=min(hi[n+i],data['source_service_caps'][name])
+        if name in data.get('node_service_caps', {}):hi[n+i]=min(hi[n+i],data['node_service_caps'][name])
     for off in offsets:
         for i,m in enumerate(M):hi[off[i]:off[i]+m+1]=1
     A=lil_matrix((len(times)*(2*n+1)+len(edges),size));lb=np.full(A.shape[0],-np.inf);ub=np.full(A.shape[0],np.inf);row=0
@@ -167,9 +177,10 @@ def solve(data,time_limit=60.):
     si=np.rint(res.x[:n]).astype(int);S=np.rint(res.x[n:2*n]).astype(int)
     if any(si[i]<0 or si[i]>M[i]-maxT[i] or S[i]<0 or S[i]>M[i] for i in range(n)):
         raise RuntimeError('Solver produced a decision outside service-time bounds')
-    if any(si[idx[x]]!=0 for x in names if not parents[x]) or any(S[idx[x]]!=0 for x in names if not children[x]) or any(S[idx[a]]>si[idx[b]] for a,b in edges):
+    if any(si[idx[x]]!=0 for x in names if not parents[x]) or any(S[idx[x]]>data.get('terminal_service_caps', {}).get(x,0) for x in names if not children[x]) or any(S[idx[a]]>si[idx[b]] for a,b in edges):
         raise RuntimeError('Solver decision violates network constraints')
     if any(S[idx[x]]>cap for x,cap in data['source_service_caps'].items()):raise RuntimeError('Solver decision violates source cap')
+    if any(S[idx[x]]>cap for x,cap in data.get('node_service_caps', {}).items()):raise RuntimeError('Solver decision violates node cap')
     costs=[];protection=[]
     for s,T in zip(data['scenarios'],times):
         tau=[int(si[i])+T[i]-int(S[i]) for i in range(n)]

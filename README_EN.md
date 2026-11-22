@@ -39,9 +39,9 @@ python -m inventory_lab.tradeoff_demo
 
 ## Model and inputs
 
-For node i in scenario ω, the protection period is τᵢω = SIᵢ + Tᵢω − Sᵢ. The model minimises max_ω Σᵢ hᵢ bᵢ(τᵢω), subject to common integer service-time decisions, arc constraints, nonnegative protection periods, boundary conditions and optional source service caps.
+For node i in scenario ω, the protection period is τᵢω = SIᵢ + Tᵢω − Sᵢ. The model minimises max_ω Σᵢ hᵢ bᵢ(τᵢω), subject to common integer service-time decisions, arc constraints, nonnegative protection periods, boundary conditions and optional service-time caps. Terminal outbound service time defaults to zero; a nonnegative terminal cap can optionally allow a positive commitment.
 
-Use [the synthetic JSON input](examples/synthetic_robust.json) as a template. The node ordering fixes the order of weights, buffer curves and each scenario's processing times. Edges must form a DAG. Processing times are nonnegative integers; curves start at zero, are nondecreasing and must cover the longest calculated horizon. Up to 32 nodes, 128 arcs and 16 scenarios are supported. Inputs are assumptions, not automatically estimated parameters. Unknown input fields are rejected; capacity constraints, transportation and shortage costs are not modelled.
+Use [the synthetic JSON input](examples/synthetic_robust.json) as a template. The node ordering fixes the order of weights, buffer curves and each scenario's processing times. Edges must form a DAG. Processing times are nonnegative integers; curves start at zero, are nondecreasing and must cover the longest calculated horizon. Up to 32 nodes, 128 arcs and 16 scenarios are supported. Optional node_service_caps constrain outbound commitments at any node; terminal_service_caps apply only to terminal nodes, with unspecified terminals fixed to zero. When multiple caps apply, the tightest applies. These represent time commitments, not capacity or actual fulfilment. Inputs are assumptions, not automatically estimated parameters. Unknown input fields are rejected; capacity constraints, transportation and shortage costs are not modelled.
 
 ## Verify
 

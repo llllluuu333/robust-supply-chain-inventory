@@ -23,8 +23,11 @@ def enumerate_optimum(data):
     horizon = sum(max_time)
     si_ranges = [range(horizon + 1) if parent[name] else range(1) for name in names]
     so_ranges = [
-        range(min(horizon, data["source_service_caps"].get(name, horizon)) + 1)
-        if child[name] else range(1) for name in names
+        range(min(horizon, data["source_service_caps"].get(name, horizon),
+                  data.get("node_service_caps", {}).get(name, horizon)) + 1)
+        if child[name] else range(min(horizon, data.get("terminal_service_caps", {}).get(name, 0),
+                                      data.get("node_service_caps", {}).get(name, horizon)) + 1)
+        for name in names
     ]
     best = math.inf
     for si in itertools.product(*si_ranges):
@@ -75,6 +78,12 @@ class EnumeratedNetworkTests(unittest.TestCase):
             ("disconnected", instance(["A", "B", "C"], [("A", "B")],
                                       [(1, 1, 1), (2, 1, 1)],
                                       [1.0, 3.0, 1.5], {"A": 1})),
+            ("node_cap", dict(instance(["A", "B", "C"], [("A", "B"), ("B", "C")],
+                                       [(1, 1, 1)], [10, 10, 1], {}),
+                              node_service_caps={"B": 0})),
+            ("terminal_cap", dict(instance(["A", "B"], [("A", "B")],
+                                           [(1, 1), (2, 1)], [1.0, 2.0], {}),
+                                  terminal_service_caps={"B": 1})),
             ("zero_weights", instance(["A", "B"], [("A", "B")],
                                       [(1, 1), (2, 1)], [0.0, 0.0], {})),
         ]
