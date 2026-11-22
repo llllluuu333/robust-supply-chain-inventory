@@ -27,6 +27,11 @@ def _is_real_nonnegative(value):
 def _validated(data):
     if not isinstance(data,dict) or data.get('schema_version')!=SCHEMA:
         raise InputError('Unsupported robust network schema version')
+    allowed = {'schema_version', 'time_unit', 'nodes', 'edges', 'weights',
+               'scenarios', 'source_service_caps', 'curves'}
+    unexpected = set(data) - allowed
+    if unexpected:
+        raise InputError('Unsupported input fields: ' + ', '.join(sorted(map(str, unexpected))))
     if data.get('time_unit') not in ('assumed_business_day','calendar_day','synthetic_day'):
         raise InputError('Specify a supported time_unit')
     names=data.get('nodes')
@@ -47,6 +52,7 @@ def _validated(data):
     seen=set();times=[]
     for scenario in scenarios:
         if not isinstance(scenario,dict):raise InputError('Invalid scenario')
+        if set(scenario) != {'name', 'T'}:raise InputError('Scenario must contain only name and T')
         name=scenario.get('name');T=scenario.get('T')
         if not isinstance(name,str) or not name.strip() or len(name)>64 or name in seen:raise InputError('Scenario names must be unique nonempty strings of at most 64 characters')
         if not isinstance(T,list) or len(T)!=n or any(type(x) is not int or not 0<=x<=365 for x in T):

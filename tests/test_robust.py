@@ -24,6 +24,12 @@ class RobustTests(unittest.TestCase):
                 best=min(best,max(costs))
         self.assertAlmostEqual(r["recomputed_worst"],best,places=6)
 
+    def test_reject_unsupported_model_and_scenario_fields(self):
+        d=example();d["capacity_constraints"]={"A": 0}
+        with self.assertRaisesRegex(InputError, "Unsupported input fields"): validate(d)
+        d=example();d["scenarios"][0]["delay_uncertainty"]=2
+        with self.assertRaisesRegex(InputError, "Scenario must contain"): validate(d)
+
     def test_reject_cycle(self):
         d=example();d["edges"].append(["M","A"])
         with self.assertRaises(InputError): validate(d)
